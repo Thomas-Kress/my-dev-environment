@@ -44,6 +44,7 @@ RUN node --version \
     && opencode --version \
     && git --version
 
+# Set the working directory for the container
 WORKDIR /workspace
 
 # tini as PID 1: forwards signals and reaps zombies for clean shutdown
