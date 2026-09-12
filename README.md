@@ -17,7 +17,7 @@ Built from Ubuntu 24.04 with:
 | **Codex** | OpenAI coding agent (`codex`) |
 | **OpenCode** | Open-source terminal coding agent (`opencode`) |
 
-The container uses **tini** as PID 1 and stays running via `sleep infinity` so you can attach and detach without rebuilding. The working directory inside the container is `/workspace`.
+The container starts via `entrypoint.sh`, which exec's **tini** as PID 1, then stays running via `sleep infinity` so you can attach and detach without rebuilding. Add extra startup logic in `entrypoint.sh` before the tini call if you need it. The working directory inside the container is `/workspace`.
 
 ## Build
 
@@ -68,7 +68,7 @@ docker run --rm -it -v ${PWD}:/workspace dev-environment bash
 
 - `--rm` — delete the container when it exits  
 - `-it` — interactive terminal  
-- `bash` — overrides `CMD` only; **tini** stays as PID 1 for clean signal handling  
+- `bash` — overrides `CMD` only; `entrypoint.sh` still runs and exec's **tini** as PID 1 for clean signal handling  
 
 When you type `exit`, the shell and container both go away. Anything not written to the mounted volume is discarded.
 

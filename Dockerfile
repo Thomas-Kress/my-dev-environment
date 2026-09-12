@@ -2,7 +2,7 @@ FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
-    PATH="/root/.local/bin:/usr/local/bin:${PATH}"
+    PATH="/root/.opencode/bin:/root/.local/bin:/usr/local/bin:${PATH}"
 
 # System packages: git, Python, tini (PID 1), build/runtime deps for installers
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -31,8 +31,8 @@ RUN curl -fsSL https://claude.ai/install.sh | bash
 # Codex CLI
 RUN npm install -g @openai/codex
 
-# OpenCode
-RUN curl -fsSL https://opencode.ai/install | OPENCODE_INSTALL_DIR=/root/.local/bin bash
+# OpenCode (installer places the binary in $HOME/.opencode/bin)
+RUN curl -fsSL https://opencode.ai/install | bash
 
 # Smoke-check that every required tool is on PATH
 RUN node --version \
@@ -47,8 +47,13 @@ RUN node --version \
 # Set the working directory for the container
 WORKDIR /workspace
 
-# tini as PID 1: forwards signals and reaps zombies for clean shutdown
-ENTRYPOINT ["/usr/bin/tini", "--"]
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+# Strip Windows CRLF so the shebang works on Linux (avoids "bad interpreter")
+RUN sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# entrypoint.sh exec's tini as PID 1, then runs CMD
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 
 # Keep the container running so it can be used as a long-lived
 # development environment (attach with: docker exec -it <name> bash)
